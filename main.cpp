@@ -2,6 +2,7 @@
 #include <time.h>
 #include <windows.h>
 #include <GL/glut.h>
+#include <GL/glu.h>
 #include "chip8.h"
 #include "main.h"
 
@@ -23,6 +24,7 @@ int main(int argc, char **argv) {
                 draw_graphics();
 
             c8.set_keys();        //Press and relase buttons
+            std::cout << "still running" << std::endl;
         }
     }
 
@@ -41,7 +43,9 @@ void init_graphics(int argc, char **argv) {
 
     glutDisplayFunc(draw_graphics);
     glutIdleFunc(draw_graphics);
-
+    glutReshapeFunc(reshape_window);
+    glutKeyboardFunc(keyboard_down);
+    glutKeyboardFunc(keyboard_up);
 }
 
 void init_input() {
@@ -51,12 +55,7 @@ void init_input() {
 void draw_graphics() {
 
     glClear(GL_COLOR_BUFFER_BIT);   //Clear framebuffer
-
-#ifdef DRAWWITHTEXTURE
-    updateTexture(myChip8);
-#else
     update_quads();
-#endif
 
     // Swap buffers!
     glutSwapBuffers();
@@ -91,4 +90,65 @@ void draw_pixel(int x, int y) {
 
     glEnd();
 
+}
+void reshape_window(GLsizei w, GLsizei h){
+    glClearColor(0.0f, 0.0f, 0.5f, 0.0f);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+//    gluOrtho2D(0, w, h, 0);
+    glMatrixMode(GL_MODELVIEW);
+    glViewport(0, 0, w, h);
+
+    // Resize quad
+    display_width = w;
+    display_height = h;
+}
+
+void keyboard_down(unsigned char key, int x, int y){
+
+        if(key == 27)    // esc
+            exit(0);
+
+        if(key == '1')		c8.key[0x1] = 1;
+        else if(key == '2')	c8.key[0x2] = 1;
+        else if(key == '3')	c8.key[0x3] = 1;
+        else if(key == '4')	c8.key[0xC] = 1;
+
+        else if(key == 'q')	c8.key[0x4] = 1;
+        else if(key == 'w')	c8.key[0x5] = 1;
+        else if(key == 'e')	c8.key[0x6] = 1;
+        else if(key == 'r')	c8.key[0xD] = 1;
+
+        else if(key == 'a')	c8.key[0x7] = 1;
+        else if(key == 's')	c8.key[0x8] = 1;
+        else if(key == 'd')	c8.key[0x9] = 1;
+        else if(key == 'f')	c8.key[0xE] = 1;
+
+        else if(key == 'z')	c8.key[0xA] = 1;
+        else if(key == 'x')	c8.key[0x0] = 1;
+        else if(key == 'c')	c8.key[0xB] = 1;
+        else if(key == 'v')	c8.key[0xF] = 1;
+}
+
+void keyboard_up(unsigned char key, int x, int y){
+
+    if(key == '1')		c8.key[0x1] = 0;
+    else if(key == '2')	c8.key[0x2] = 0;
+    else if(key == '3')	c8.key[0x3] = 0;
+    else if(key == '4')	c8.key[0xC] = 0;
+
+    else if(key == 'q')	c8.key[0x4] = 0;
+    else if(key == 'w')	c8.key[0x5] = 0;
+    else if(key == 'e')	c8.key[0x6] = 0;
+    else if(key == 'r')	c8.key[0xD] = 0;
+
+    else if(key == 'a')	c8.key[0x7] = 0;
+    else if(key == 's')	c8.key[0x8] = 0;
+    else if(key == 'd')	c8.key[0x9] = 0;
+    else if(key == 'f')	c8.key[0xE] = 0;
+
+    else if(key == 'z')	c8.key[0xA] = 0;
+    else if(key == 'x')	c8.key[0x0] = 0;
+    else if(key == 'c')	c8.key[0xB] = 0;
+    else if(key == 'v')	c8.key[0xF] = 0;
 }

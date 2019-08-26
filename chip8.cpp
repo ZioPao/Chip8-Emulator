@@ -46,7 +46,8 @@ void chip8::initialize() {
 void chip8::emulate_cycle() {
 
     //Fetch Opcode, 2 byte
-    opcode = mem[PC] << 8u | mem[PC + 1];        //First we shift it 8 bits to the left, then we merge PC with PC+1 opcodes with an OR
+    opcode = mem[PC] << 8u |
+             mem[PC + 1];        //First we shift it 8 bits to the left, then we merge PC with PC+1 opcodes with an OR
 
     switch (opcode & 0xF000u) {     //if opcode has something at the first left bit
 
@@ -173,7 +174,9 @@ void chip8::emulate_cycle() {
 
                     PC += 2;
                     break;
-
+                default:
+                    std::cout << "Unknown opcode" << std::endl;
+                    break;
             }
 
         case 0x9000:        ///Skip if Vx != Vy
@@ -193,7 +196,7 @@ void chip8::emulate_cycle() {
         case 0xD000:        ///Drawing crap
         {
             unsigned short x = V[(opcode & 0x0F00u) >> 8u];
-            unsigned short y = V[(opcode & 0x0F00u) >> 4u];
+            unsigned short y = V[(opcode & 0x00F0u) >> 4u];
             unsigned short height = opcode & 0x000Fu;
             unsigned short pixel;
 
@@ -202,9 +205,9 @@ void chip8::emulate_cycle() {
             for (int y_line = 0; y_line < height; y_line++) {   //loop for every row
                 pixel = mem[I + y_line];                        //fetch pixel values for every row
                 for (int x_line = 0; x_line < 8; x_line++) {
-                    if ((pixel & (0x80 >> x_line)) != 0 &&
-                        screen[x + x_line + (y + y_line) * 64] == 1) //needs to be printed
-                        V[0xF] = 1;
+                    if ((pixel & (0x80 >> x_line)) != 0)
+                        if (screen[(x + x_line + ((y + y_line) * 64))] == 1)
+                            V[0xF] = 1;
                     screen[x + x_line + ((y + y_line) * 64)] ^= 1;          //set screen value via XOR
                 }
             }
@@ -216,11 +219,76 @@ void chip8::emulate_cycle() {
 
         case 0xE000:
             switch (opcode & 0x00FFu) {
-                case 0x009E:
+                case 0x009E:            ///Skip Vx if key with value of VX is pressed
                     if (key[V[(opcode & 0x0F00u) >> 8u]] != 0)
                         PC += 4;
                     else
                         PC += 2;
+                    break;
+                case 0x00A1:        ///Skip Vx if key is not pressed
+                    if (key[V[(opcode & 0x0F00u) >> 8u]] == 0)
+                        PC += 4;
+                    else
+                        PC += 2;
+                    break;
+                default:
+                    std::cout << "Unknown opcode" << std::endl;
+                    break;
+            }
+        case 0xF000:
+            switch (opcode & 0x00FFu) {
+                case 0x0007:            ///Set Vx = delay timer value
+                    V[(opcode & 0x0F00u) >> 8u] = delay_timer;
+                    PC += 2;
+                    break;
+                case 0x000A:            ///Wait for a key press, store in Vx
+
+                    while (key[0] == 0) {
+                    }
+                    V[(opcode & 0x0F00u) >> 8u] = key[0x0];     //todo not sure
+                    PC += 2;
+                    break;
+                case 0x0015:            ///Set delay timer = Vx
+                    delay_timer = V[(opcode & 0x0F00u) >> 8u];
+                    PC += 2;
+                    break;
+                case 0x0018:            ///Set sound timer = Vx
+                    sound_timer = V[(opcode & 0x0F00u) >> 8u];
+                    PC += 2;
+                    break;
+                case 0x001E:            ///Set I = I + Vx
+                    I += V[(opcode & 0x0F00u) >> 8u];
+                    PC += 2;
+                    break;
+                case 0x0029:            ///Set I = location of sprite for digit Vx
+                    break;
+                case 0x0033:    ///Stores binary coded decimal rappresentation of VX at the addresses I, I+1 and I+2
+                    mem[I] = V[opcode & 0x0F00u >> 8u] / 100;
+                    mem[I + 1] = (V[opcode & 0x0F00u >> 8u] / 10) % 10;
+                    mem[I + 2] = (V[opcode & 0x0F00u >> 8u] % 100) % 10;
+                    PC += 2;
+                    break;
+                case 0x0055: {            ///Store V0 through Vx in mem starting from I
+
+                    int count = 0;
+                    for (int i = I; i < (opcode & 0x0F00u >> 8u) + I; ++i) {
+                        mem[i] = V[count];
+                        count++;
+                    }
+                    PC += 2;
+                    break;
+
+                }
+                case 0x0065: {            ///Read V0 through Vx from mem starting from I
+                    int count = 0;
+                    for (int i = I; i < (opcode & 0x0F00u >> 8u) + I; ++i) {
+                        V[count] = mem[i];
+                        count++;
+                    }
+                    PC += 2;
+                    break;
+                }
+
             }
 
         case 0x0000:                //it was something like 0x00F0, so it returned 0
@@ -258,19 +326,12 @@ void chip8::emulate_cycle() {
                     break;
                 default:
                     std::cout << "Error: unknow opcode [0x0000]" << std::endl;
+                    break;
             }
-
-
-            //todo where do I put this?
-        case 0x0033:    ///Stores binary coded decimal rappresentation of VX at the addresses I, I+1 and I+2
-            mem[I] = V[opcode & 0x0F00u >> 8u] / 100;
-            mem[I + 1] = (V[opcode & 0x0F00u >> 8u] / 10) % 10;
-            mem[I + 2] = (V[opcode & 0x0F00u >> 8u] % 100) % 10;
-            PC += 2;
-
 
         default:
             std::cout << "Error: unknown opcode: " << opcode << std::endl;
+            break;
     }
     //at the end update timers
 
@@ -302,28 +363,27 @@ bool chip8::load_game(const char *name) {
 
     //Allocate memory to contain the game
 
-    char* buffer = (char*)malloc(sizeof(char)* game_size);
+    char *buffer = (char *) malloc(sizeof(char) * game_size);
 
-    if (buffer == NULL){
+    if (buffer == NULL) {
         fputs("Couldn't allocate memory", stderr);
         return false;
     }
 
     size_t result = fread(buffer, 1, game_size, game);      //Copy the file into the buffer
-    if (result != game_size){            //something went wrong
+    if (result != game_size) {            //something went wrong
         fputs("Something went wrong with the allocation", stderr);
         return false;
     }
 
     //Copy buffer into the emulated memory
 
-    if ( (4096 - 512) < game_size){
-        fputs("Game is too big",stderr);
+    if ((4096 - 512) < game_size) {
+        fputs("Game is too big", stderr);
         return false;
-    }
-    else{
+    } else {
 
-        for (int i=0; i < game_size; ++i){
+        for (int i = 0; i < game_size; ++i) {
             mem[i + 512] = buffer[i];
         }
     }

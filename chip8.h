@@ -17,6 +17,7 @@ public:
     //bool loadApplication(const char *filename);
     bool draw_flag;
     unsigned char screen[64 * 32];        //screen dimensions
+    unsigned char key[16];
 
 
 
@@ -52,7 +53,6 @@ private:
     unsigned short stack[16];        // Stack (16 levels)
     unsigned short sp;                // Stack pointer
 
-    unsigned char key[16];
 
     unsigned char delay_timer;        // Delay timer
     unsigned char sound_timer;        // Sound timer

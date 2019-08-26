@@ -20,11 +20,11 @@ static void draw_graphics();
 static void update_quads();
 static void draw_pixel(int x, int y);
 
-static void reshape_window(GLsizei w, GLsizei h);
+void reshape_window(GLsizei w, GLsizei h);
 
-static void keyboard_up(unsigned char key, int x, int y);
+void keyboard_up(unsigned char key, int x, int y);
 
-static void keyboard_down(unsigned char key, int x, int y);
+void keyboard_down(unsigned char key, int x, int y);
 
 
 ;
