@@ -51,14 +51,28 @@ void chip8::emulate_cycle() {
 
     switch (opcode & 0xF000u) {     //if opcode has something at the first left bit
 
+        case 0x0000:                //it was something like 0x00F0, so it returned 0
+            switch (opcode & 0x000Fu) {
+                case 0x0000:    ///Clean the screen
+                    for (unsigned char &i : screen)
+                        i = 0x0;
 
+                    draw_flag = true;
+                    PC += 2;
+                    break;
+                case 0x000E:    ///Returns from subroutine
 
-        case 0x1000:
-        case 0xA000:     ///Annn: Sets I to nnn
+                    //subroutine is stored somewhere in the stack
+                    --sp;           //prevent overflow, max 16
+                    PC = stack[sp];     //restore PC
+                    PC += 2;        //always increment this thingy
 
-            I = opcode & 0x0FFFu;
-            PC += 2;
-            break;  //todo not sure
+                    break;
+            }
+
+        case 0x1000:     ///Jump to nnnn
+            PC = (opcode & 0x0FFFu) << 4u;
+            break;
 
         case 0x2000:    ///Calls subroutine at address NNNN
             stack[sp] = PC;     //save old address
@@ -68,23 +82,23 @@ void chip8::emulate_cycle() {
 
         case 0x3000:    ///Skip next instruction if Vx=kk
 
-            if ((opcode & 0x00FFu) == V[opcode & 0x0F00u])
+            if (V[(opcode & 0x0F00u) >> 8u] == (opcode & 0x00FFu) << 8u)
                 PC += 2;
             break;
 
         case 0x4000:  ///Skip next instruction if Vx != kk
-            if ((opcode & 0x00FFu) != V[opcode & 0x0F00u])
+            if (V[(opcode & 0x0F00u) >> 8u] != (opcode & 0x00FFu) << 8u)
                 PC += 2;
             break;
 
         case 0x5000:    ///Skip next instruction if Vx=Vy
-            if (V[opcode & 0x0F00u] == V[opcode & 0x00F0u])
+            if (V[(opcode & 0x0F00u) >> 8u] == V[(opcode & 0x00F0u) >> 4u])
                 PC += 2;
             break;
 
         case 0x6000:      ///Set Vx = kk
 
-            V[opcode & 0x0F00u] = opcode & 0x00FFu;
+            V[(opcode & 0x0F00u) >> 8u] = (opcode & 0x00FFu) << 8u;      //todo not sure
             PC += 2;
             break;
 
@@ -183,6 +197,10 @@ void chip8::emulate_cycle() {
             if (V[opcode & 0x0F00u] != V[opcode & 0x00F0u])
                 PC += 2;
             break;
+        case 0xA000:     ///Annn: Sets I to nnn
+            I = opcode & 0x0FFFu;
+            PC += 2;
+            break;  //todo not sure
 
         case 0xB000:        ///JP to nnn + V0
             PC = ((opcode & 0x0FFFu) << 4u) + V[0x0];
@@ -232,7 +250,7 @@ void chip8::emulate_cycle() {
                         PC += 2;
                     break;
                 default:
-                    std::cout << "Unknown opcode" << std::endl;
+                    std::cout << "Error: unknown opcode: " << opcode << std::endl;
                     break;
             }
         case 0xF000:
@@ -288,60 +306,27 @@ void chip8::emulate_cycle() {
                     PC += 2;
                     break;
                 }
-
-            }
-
-        case 0x0000:                //it was something like 0x00F0, so it returned 0
-
-            switch (opcode & 0xF000u) {
-                //Jump code
-                case 0x0000:
-                    break;
-            }
-            switch (opcode & 0x000Fu) {
-
-                case 0x0000:    ///Clean the screen
-                    for (unsigned char &i : screen)
-                        i = 0x0;
-
-                    draw_flag = true;
-                    PC += 2;
-                    break;
-                case 0x000E:    ///Returns from subroutine
-
-                    //subroutine is stored somewhere in the stack
-                    --sp;           //prevent overflow, max 16
-                    PC = stack[sp];     //restore PC
-                    PC += 2;        //always increment this thingy
-
-                    break;
-
-                case 0x0004:    ///Adds value of VY to VX
-                    if (V[(opcode & 0x00F0u) >> 4u] > (0xFF - V[(opcode & 0x0F00u) >> 8u]))
-                        V[0xF] = 1; //set VF to 1
-                    else
-                        V[0xF] = 0;  //set VF to 0
-                    V[(opcode & 0x0F00u) >> 8u] += V[(opcode & 0x00F0u) >> 4u];
-                    PC += 2;
-                    break;
                 default:
-                    std::cout << "Error: unknow opcode [0x0000]" << std::endl;
+                    std::cout << "Error: unknown opcode: " << opcode << std::endl;
                     break;
-            }
 
+            }
         default:
             std::cout << "Error: unknown opcode: " << opcode << std::endl;
             break;
     }
-    //at the end update timers
+//at the end update timers
 
     if (delay_timer > 0) {
-        --delay_timer;
+        --
+                delay_timer;
     }
 
     if (sound_timer > 0 && sound_timer == 1) {
-        --sound_timer;
-        std::cout << "Beep" << std::endl;
+        --
+                sound_timer;
+        std::cout << "Beep" <<
+                  std::endl;
     }
 
 }

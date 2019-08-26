@@ -15,20 +15,10 @@ int main(int argc, char **argv) {
 
     c8.initialize();      //emu initialization
 
-    if (c8.load_game("pong")){
-        while(1){
+    if (!c8.load_game("pong"))
+        exit(1);
 
-            c8.emulate_cycle();       //One cycle
-
-            if (c8.draw_flag)
-                draw_graphics();
-
-            c8.set_keys();        //Press and relase buttons
-            std::cout << "still running" << std::endl;
-        }
-    }
-
-
+    glutMainLoop();     //todo
     return 0;
 }
 
@@ -39,7 +29,10 @@ void init_graphics(int argc, char **argv) {
 
     glutInitWindowSize(display_width, display_height);
     glutInitWindowPosition(320,320);
-    glutCreateWindow("Emulator");
+    int id = glutCreateWindow("Emulator");
+
+    if (id < 1)
+        exit(1);
 
     glutDisplayFunc(draw_graphics);
     glutIdleFunc(draw_graphics);
@@ -53,15 +46,36 @@ void init_input() {
 }
 
 void draw_graphics() {
+    c8.emulate_cycle();       //One cycle
 
-    glClear(GL_COLOR_BUFFER_BIT);   //Clear framebuffer
-    update_quads();
+    if(c8.draw_flag){
+        glClear(GL_COLOR_BUFFER_BIT);   //Clear framebuffer
+        update_quads();
 
-    // Swap buffers!
+        // Swap buffers!
+        glutSwapBuffers();
+
+        // Processed frame
+        c8.draw_flag = false;
+    }
+
+
+
+    /*glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glBegin(GL_QUADS);
+    glVertex3f(-0.5,0,0.0);
+    glVertex3f(0.0, 0.0, 0.0);
+
+    glVertex3f(0.0, 0.5, 0);
+    glVertex3f(-0.5, 0.5, 0);
+
+    glEnd();
+
     glutSwapBuffers();
+*/
 
-    // Processed frame
-    c8.draw_flag = false;
+
 }
 void update_quads() {
 
