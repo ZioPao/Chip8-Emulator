@@ -39,16 +39,23 @@ void chip8::initialize() {
         mem[i] = chip8_fontset[i];         //loads the fontset into memory
     }
 
+    delay_timer = 0;
+    sound_timer = 0;
+    draw_flag = true;
 
-    //Timers
+    std::cout << "Initialization done" << std::endl;
 }
 
 void chip8::emulate_cycle() {
 
     //Fetch Opcode, 2 byte
+    unsigned short test = (mem[PC] << 8u) | mem[PC + 1];
+    std::cout << test << std::endl;
+    //std::cout << mem[PC +1] << std::endl;
     opcode = mem[PC] << 8u |
              mem[PC + 1];        //First we shift it 8 bits to the left, then we merge PC with PC+1 opcodes with an OR
 
+    //std::cout << opcode << std::endl;
     switch (opcode & 0xF000u) {     //if opcode has something at the first left bit
 
         case 0x0000:                //it was something like 0x00F0, so it returned 0
@@ -66,12 +73,13 @@ void chip8::emulate_cycle() {
                     --sp;           //prevent overflow, max 16
                     PC = stack[sp];     //restore PC
                     PC += 2;        //always increment this thingy
-
                     break;
+                default:
+                    std::cout << "test" << std::endl;
             }
-
+            break;
         case 0x1000:     ///Jump to nnnn
-            PC = (opcode & 0x0FFFu) << 4u;
+            PC = (opcode & 0x0FFFu);
             break;
 
         case 0x2000:    ///Calls subroutine at address NNNN
@@ -82,12 +90,17 @@ void chip8::emulate_cycle() {
 
         case 0x3000:    ///Skip next instruction if Vx=kk
 
-            if (V[(opcode & 0x0F00u) >> 8u] == (opcode & 0x00FFu) << 8u)
+            if (V[(opcode & 0x0F00u) >> 8u] == (opcode & 0x00FFu))
+                PC += 4;
+            else
                 PC += 2;
             break;
 
         case 0x4000:  ///Skip next instruction if Vx != kk
-            if (V[(opcode & 0x0F00u) >> 8u] != (opcode & 0x00FFu) << 8u)
+
+            if (V[(opcode & 0x0F00u) >> 8u] != (opcode & 0x00FFu))
+                PC += 4;
+            else
                 PC += 2;
             break;
 
@@ -98,7 +111,7 @@ void chip8::emulate_cycle() {
 
         case 0x6000:      ///Set Vx = kk
 
-            V[(opcode & 0x0F00u) >> 8u] = (opcode & 0x00FFu) << 8u;      //todo not sure
+            V[(opcode & 0x0F00u) >> 8u] = (opcode & 0x00FFu);      //todo why we dont shift this?
             PC += 2;
             break;
 
@@ -132,7 +145,7 @@ void chip8::emulate_cycle() {
                     break;
                 case 0x0004:        ///Set Vx = Vx + Vy, set Vf = carry if overflow
 
-                    if (V[(opcode & 0x0F00u) >> 8u] + V[(opcode & 0x00F0u) >> 4u] > 255)
+                    if ((V[(opcode & 0x0F00u) >> 8u] + V[(opcode & 0x00F0u) >> 4u]) > 255)
                         V[0xF] = 1;
                     else
                         V[0xF] = 0;
@@ -189,16 +202,16 @@ void chip8::emulate_cycle() {
                     PC += 2;
                     break;
                 default:
-                    std::cout << "Unknown opcode" << std::endl;
+                    std::cout << "Unknown opcode: " << opcode << std::endl;
                     break;
             }
-
+            break;
         case 0x9000:        ///Skip if Vx != Vy
             if (V[opcode & 0x0F00u] != V[opcode & 0x00F0u])
                 PC += 2;
             break;
         case 0xA000:     ///Annn: Sets I to nnn
-            I = opcode & 0x0FFFu;
+            I = (opcode & 0x0FFFu) << 4u;
             PC += 2;
             break;  //todo not sure
 
@@ -207,7 +220,7 @@ void chip8::emulate_cycle() {
             break;
         case 0xC000:        ///RND byte AND kk
 
-            V[(opcode & 0x0F00u) >> 8u] = rand() % 256 + ((opcode & 0x00FFu) << 8u);
+            V[(opcode & 0x0F00u) >> 8u] = rand() % 256 + ((opcode & 0x00FFu));
             PC += 2;
             break;
 
@@ -232,8 +245,8 @@ void chip8::emulate_cycle() {
 
             draw_flag = true;           //Signals that the screen has to be updated
             PC += 2;
-        }
             break;
+        }
 
         case 0xE000:
             switch (opcode & 0x00FFu) {
@@ -253,6 +266,7 @@ void chip8::emulate_cycle() {
                     std::cout << "Error: unknown opcode: " << opcode << std::endl;
                     break;
             }
+            break;
         case 0xF000:
             switch (opcode & 0x00FFu) {
                 case 0x0007:            ///Set Vx = delay timer value
@@ -311,6 +325,7 @@ void chip8::emulate_cycle() {
                     break;
 
             }
+            break;
         default:
             std::cout << "Error: unknown opcode: " << opcode << std::endl;
             break;

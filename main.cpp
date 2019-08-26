@@ -10,15 +10,16 @@
 int main(int argc, char **argv) {
 
     //Init
+
+    c8.initialize();      //emu initialization
     init_graphics(argc, argv);
     init_input();
 
-    c8.initialize();      //emu initialization
 
-    if (!c8.load_game("pong"))
+    if (!c8.load_game("tetris"))
         exit(1);
 
-    glutMainLoop();     //todo
+    glutMainLoop();
     return 0;
 }
 
@@ -28,7 +29,7 @@ void init_graphics(int argc, char **argv) {
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 
     glutInitWindowSize(display_width, display_height);
-    glutInitWindowPosition(320,320);
+    glutInitWindowPosition(320, 320);
     int id = glutCreateWindow("Emulator");
 
     if (id < 1)
@@ -48,50 +49,31 @@ void init_input() {
 void draw_graphics() {
     c8.emulate_cycle();       //One cycle
 
-    if(c8.draw_flag){
+    if (c8.draw_flag) {
         glClear(GL_COLOR_BUFFER_BIT);   //Clear framebuffer
         update_quads();
-
-        // Swap buffers!
+        // Swap buffers
         glutSwapBuffers();
-
         // Processed frame
         c8.draw_flag = false;
     }
-
-
-
-    /*glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glBegin(GL_QUADS);
-    glVertex3f(-0.5,0,0.0);
-    glVertex3f(0.0, 0.0, 0.0);
-
-    glVertex3f(0.0, 0.5, 0);
-    glVertex3f(-0.5, 0.5, 0);
-
-    glEnd();
-
-    glutSwapBuffers();
-*/
-
-
 }
+
 void update_quads() {
 
     //Draw quads
-
     for (int y = 0; y < SCREEN_HEIGHT; ++y)
         for (int x = 0; x < SCREEN_WIDTH; ++x) {
 
             if (c8.screen[(y * 64) + x] == 0)
-                glColor3f(0.0f, 0.0f, 0.0f);
+                glColor3f(0.0f, 0.0f, 0.0f);        //rest of the screen?
             else
-                glColor3f(1.0f, 1.0f, 1.0f);
+                glColor3f(1.0f, 1.0f, 1.0f);        //actual sprites
 
             draw_pixel(x, y);
         }
 }
+
 void draw_pixel(int x, int y) {
 
     //We're making quads, so it makes sense that we have 4 vertices
@@ -105,7 +87,8 @@ void draw_pixel(int x, int y) {
     glEnd();
 
 }
-void reshape_window(GLsizei w, GLsizei h){
+
+void reshape_window(GLsizei w, GLsizei h) {
     glClearColor(0.0f, 0.0f, 0.5f, 0.0f);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -118,51 +101,51 @@ void reshape_window(GLsizei w, GLsizei h){
     display_height = h;
 }
 
-void keyboard_down(unsigned char key, int x, int y){
+void keyboard_down(unsigned char key, int x, int y) {
 
-        if(key == 27)    // esc
-            exit(0);
+    if (key == 27)    // esc
+        exit(0);
 
-        if(key == '1')		c8.key[0x1] = 1;
-        else if(key == '2')	c8.key[0x2] = 1;
-        else if(key == '3')	c8.key[0x3] = 1;
-        else if(key == '4')	c8.key[0xC] = 1;
+    if (key == '1') c8.key[0x1] = 1;
+    else if (key == '2') c8.key[0x2] = 1;
+    else if (key == '3') c8.key[0x3] = 1;
+    else if (key == '4') c8.key[0xC] = 1;
 
-        else if(key == 'q')	c8.key[0x4] = 1;
-        else if(key == 'w')	c8.key[0x5] = 1;
-        else if(key == 'e')	c8.key[0x6] = 1;
-        else if(key == 'r')	c8.key[0xD] = 1;
+    else if (key == 'q') c8.key[0x4] = 1;
+    else if (key == 'w') c8.key[0x5] = 1;
+    else if (key == 'e') c8.key[0x6] = 1;
+    else if (key == 'r') c8.key[0xD] = 1;
 
-        else if(key == 'a')	c8.key[0x7] = 1;
-        else if(key == 's')	c8.key[0x8] = 1;
-        else if(key == 'd')	c8.key[0x9] = 1;
-        else if(key == 'f')	c8.key[0xE] = 1;
+    else if (key == 'a') c8.key[0x7] = 1;
+    else if (key == 's') c8.key[0x8] = 1;
+    else if (key == 'd') c8.key[0x9] = 1;
+    else if (key == 'f') c8.key[0xE] = 1;
 
-        else if(key == 'z')	c8.key[0xA] = 1;
-        else if(key == 'x')	c8.key[0x0] = 1;
-        else if(key == 'c')	c8.key[0xB] = 1;
-        else if(key == 'v')	c8.key[0xF] = 1;
+    else if (key == 'z') c8.key[0xA] = 1;
+    else if (key == 'x') c8.key[0x0] = 1;
+    else if (key == 'c') c8.key[0xB] = 1;
+    else if (key == 'v') c8.key[0xF] = 1;
 }
 
-void keyboard_up(unsigned char key, int x, int y){
+void keyboard_up(unsigned char key, int x, int y) {
 
-    if(key == '1')		c8.key[0x1] = 0;
-    else if(key == '2')	c8.key[0x2] = 0;
-    else if(key == '3')	c8.key[0x3] = 0;
-    else if(key == '4')	c8.key[0xC] = 0;
+    if (key == '1') c8.key[0x1] = 0;
+    else if (key == '2') c8.key[0x2] = 0;
+    else if (key == '3') c8.key[0x3] = 0;
+    else if (key == '4') c8.key[0xC] = 0;
 
-    else if(key == 'q')	c8.key[0x4] = 0;
-    else if(key == 'w')	c8.key[0x5] = 0;
-    else if(key == 'e')	c8.key[0x6] = 0;
-    else if(key == 'r')	c8.key[0xD] = 0;
+    else if (key == 'q') c8.key[0x4] = 0;
+    else if (key == 'w') c8.key[0x5] = 0;
+    else if (key == 'e') c8.key[0x6] = 0;
+    else if (key == 'r') c8.key[0xD] = 0;
 
-    else if(key == 'a')	c8.key[0x7] = 0;
-    else if(key == 's')	c8.key[0x8] = 0;
-    else if(key == 'd')	c8.key[0x9] = 0;
-    else if(key == 'f')	c8.key[0xE] = 0;
+    else if (key == 'a') c8.key[0x7] = 0;
+    else if (key == 's') c8.key[0x8] = 0;
+    else if (key == 'd') c8.key[0x9] = 0;
+    else if (key == 'f') c8.key[0xE] = 0;
 
-    else if(key == 'z')	c8.key[0xA] = 0;
-    else if(key == 'x')	c8.key[0x0] = 0;
-    else if(key == 'c')	c8.key[0xB] = 0;
-    else if(key == 'v')	c8.key[0xF] = 0;
+    else if (key == 'z') c8.key[0xA] = 0;
+    else if (key == 'x') c8.key[0x0] = 0;
+    else if (key == 'c') c8.key[0xB] = 0;
+    else if (key == 'v') c8.key[0xF] = 0;
 }
