@@ -283,12 +283,4 @@ void chip8::emulate_cycle() {
         std::cout << "Beep" << std::endl;
     }
 
-
-
-    //Decode
-
-
-
-    //WE've got 0xA2F0, we must check the opcode table, we do what it says that it needs to do. In this case, we set I with the value of NNN = 0x2F0
-
 }
