@@ -5,6 +5,7 @@ chip8::chip8() {
 
     initialize();
 }
+
 chip8::~chip8() {
 
 }
@@ -44,14 +45,16 @@ void chip8::initialize() {
 void chip8::emulate_cycle() {
 
     //Fetch Opcode
-    opcode = mem[PC] << 8u | mem[PC +1];        //First we shift it 8 bits to the left, then we merge PC with PC+1 opcodes with an OR
+    opcode = mem[PC] << 8u |
+             mem[PC + 1];        //First we shift it 8 bits to the left, then we merge PC with PC+1 opcodes with an OR
 
     switch (opcode & 0xF000u) {     //if opcode has something at the first left bit
 
 
 
-        case 0xA000:     ///Annn: Sets I to nnn
         case 0x1000:
+        case 0xA000:     ///Annn: Sets I to nnn
+
             I = opcode & 0x0FFFu;
             PC += 2;
             break;  //todo not sure
@@ -92,44 +95,137 @@ void chip8::emulate_cycle() {
 
         case 0x8000:   ///Multiple cases
 
-        switch (opcode & 0x000Fu){
+            switch (opcode & 0x000Fu) {
 
-            case 0x0000:        ///Set Vx = Vy
-                V[(opcode & 0x0F00u) >> 8u] = V[(opcode & 0x00F0u) >> 4u];
+                case 0x0000:        ///Set Vx = Vy
+                    V[(opcode & 0x0F00u) >> 8u] = V[(opcode & 0x00F0u) >> 4u];
+                    PC += 2;
+                    break;
+
+                case 0x0001:        ///Set Vx = Vx | Vy
+                    V[(opcode & 0x0F00u) >> 8u] = V[(opcode & 0x0F00u) >> 8u] | V[(opcode & 0x00F0u) >> 4u];
+                    PC += 2;
+                    break;
+
+                case 0x0002:        ///Set Vx = Vx AND Vy
+                    V[(opcode & 0x0F00u) >> 8u] = V[(opcode & 0x0F00u) >> 8u] & V[(opcode & 0x00F0u) >> 4u];
+                    PC += 2;
+                    break;
+                case 0x0003:        ///Set Vx = Vx XOR Vy
+                    V[(opcode & 0x0F00u) >> 8u] = V[(opcode & 0x0F00u) >> 8u] ^ V[(opcode & 0x00F0u) >> 4u];
+                    PC += 2;
+                    break;
+                case 0x0004:        ///Set Vx = Vx + Vy, set Vf = carry if overflow
+
+                    if (V[(opcode & 0x0F00u) >> 8u] + V[(opcode & 0x00F0u) >> 4u] > 255)
+                        V[0xF] = 1;
+                    else
+                        V[0xF] = 0;
+
+                    V[(opcode & 0x0F00u) >> 8u] += V[(opcode & 0x00F0u) >> 4u];
+
+                    PC += 2;
+                    break;
+                case 0x0005:        ///Set Vx = Vx - Vy, set Vf = NOT BORROW if underflow
+
+                    if (V[(opcode & 0x0F00u) >> 8u] > V[(opcode & 0x00F0u) >> 4u])
+                        V[0xF] = 1;
+                    else
+                        V[0xF] = 0;
+
+                    V[(opcode & 0x0F00u) >> 8u] -= V[(opcode & 0x00F0u) >> 4u];
+
+                    PC += 2;
+                    break;
+                case 0x0006:        ///Set Vx = Vx SHR 1
+
+                    if ((V[(opcode & 0x0F00u) >> 8u] & 0x000Fu) == 1)
+                        V[0xF] = 1;
+                    else
+                        V[0xF] = 0;
+
+                    V[(opcode & 0x0F00u) >> 8u] /= 2;  //divided by 2
+
+                    PC += 2;
+                    break;
+
+                case 0x0007:        ///Set Vx = Vy - Vx and set Vf = not borrow if underflow
+
+
+                    if (V[(opcode & 0x0F00u) >> 8u] < V[(opcode & 0x00F0u) >> 4u])
+                        V[0xF] = 1;     //dont borrow
+                    else
+                        V[0xF] = 0;
+
+                    //Vx = Vy-Vx
+                    V[(opcode & 0x0F00u) >> 8u] = V[(opcode & 0x00F0u) >> 4u] - V[(opcode & 0x0F00u) >> 8u];
+
+                    PC += 2;
+                    break;
+                case 0x0008:        ///Set Vx = Vx SHL 1
+
+                    if ((V[(opcode & 0x0F00u) >> 8u]) & (0xF000u) == 1)       //todo something isnt right
+                        V[0xF] = 1;
+                    else
+                        V[0xF] = 0;
+
+                    V[(opcode & 0x0F00u) >> 8u] *= 2;  //multiplied by 2
+
+                    PC += 2;
+                    break;
+
+            }
+
+        case 0x9000:        ///Skip if Vx != Vy
+            if (V[opcode & 0x0F00u] != V[opcode & 0x00F0u])
                 PC += 2;
-                break;
+            break;
 
-            case 0x0001:        ///Set Vx = Vx | Vy
-                V[(opcode & 0x0F00u) >> 8u] = V[(opcode & 0x0F00u) >> 8u] | V[(opcode & 0x00F0u) >> 4u];
-                PC += 2;
-                break;
+        case 0xB000:        ///JP to nnn + V0
+            PC = ((opcode & 0x0FFFu) << 4u) + V[0x0];
+            break;
+        case 0xC000:        ///RND byte AND kk
 
-            case 0x0002:        ///Set Vx = Vx AND Vy
-                V[(opcode & 0x0F00u) >> 8u] = V[(opcode & 0x0F00u) >> 8u] & V[(opcode & 0x00F0u) >> 4u];
-                PC += 2;
-                break;
-            case 0x0003:        ///Set Vx = Vx XOR Vy
-                V[(opcode & 0x0F00u) >> 8u] = V[(opcode & 0x0F00u) >> 8u] ^ V[(opcode & 0x00F0u) >> 4u];
-                PC += 2;
-                break;
-            case 0x0004:        ///Set Vx = Vx + Vy, set Vf = carry if overflow
+            V[(opcode & 0x0F00u) >> 8u] =  rand()%256 + ((opcode & 0x00FFu) << 8u);
+            PC += 2;
+            break;
 
-                if (V[(opcode & 0x0F00u) >> 8u] +  V[(opcode & 0x00F0u) >> 4u] > 255)
-                    V[0xF] = 1;
-                else
-                    V[0xF] = 0;
-                
-                V[(opcode & 0x0F00u) >> 8u] +=  V[(opcode & 0x00F0u) >> 4u];
+        case 0xD000:        ///Drawing crap
+        {
+            unsigned short x = V[(opcode & 0x0F00u) >> 8u];
+            unsigned short y = V[(opcode & 0x0F00u) >> 4u];
+            unsigned short height = opcode & 0x000Fu;
+            unsigned short pixel;
 
-                PC += 2;
-                break;
+            V[0xF] = 0; //Reset register
 
+            for (int y_line = 0; y_line < height; y_line++) {   //loop for every row
+                pixel = mem[I + y_line];                        //fetch pixel values for every row
+                for (int x_line = 0; x_line < 8; x_line++) {
+                    if ((pixel & (0x80 >> x_line)) != 0 &&
+                        screen[x + x_line + (y + y_line) * 64] == 1) //needs to be printed
+                        V[0xF] = 1;
+                    screen[x + x_line + ((y + y_line) * 64)] ^= 1;          //set screen value via XOR
+                }
+            }
+
+            draw_flag = true;           //Signals that the screen has to be updated
+            PC += 2;
         }
+            break;
 
+        case 0xE000:
+            switch (opcode & 0x00FFu) {
+                case 0x009E:
+                    if (key[V[(opcode & 0x0F00u) >> 8u]] != 0)
+                        PC += 4;
+                    else
+                        PC += 2;
+            }
 
         case 0x0000:                //it was something like 0x00F0, so it returned 0
 
-            switch (opcode & 0xF000u){
+            switch (opcode & 0xF000u) {
                 //Jump code
                 case 0x0000:
                     printf("This is useless");
@@ -172,38 +268,6 @@ void chip8::emulate_cycle() {
             mem[I + 2] = (V[opcode & 0x0F00u >> 8u] % 100) % 10;
             PC += 2;
 
-        case 0xD000:        ///Drawing crap
-        {
-            unsigned short x = V[(opcode & 0x0F00u) >> 8u];
-            unsigned short y = V[(opcode & 0x0F00u) >> 4u];
-            unsigned short height = opcode & 0x000Fu;
-            unsigned short pixel;
-
-            V[0xF] = 0; //Reset register
-
-            for (int y_line = 0; y_line < height; y_line++) {   //loop for every row
-                pixel = mem[I + y_line];                        //fetch pixel values for every row
-                for (int x_line = 0; x_line < 8; x_line++) {
-                    if ((pixel & (0x80 >> x_line)) != 0 &&
-                        screen[x + x_line + (y + y_line) * 64] == 1) //needs to be printed
-                        V[0xF] = 1;
-                    screen[x + x_line + ((y + y_line) * 64)] ^= 1;          //set screen value via XOR
-                }
-            }
-
-            draw_flag = true;           //Signals that the screen has to be updated
-            PC += 2;
-        }
-            break;
-
-        case 0xE000:
-            switch (opcode & 0x00FFu) {
-                case 0x009E:
-                    if (key[V[(opcode & 0x0F00u) >> 8u]] != 0)
-                        PC += 4;
-                    else
-                        PC += 2;
-            }
 
         default:
             std::cout << "Error: unknown opcode" << std::endl;

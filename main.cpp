@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
 
     unsigned short opcode = 0x82F3;
     unsigned short test_test = opcode & 0x0F00;
-    test_test = test_test >> 8;
+    srand(time(NULL));
     unsigned short test = opcode & 0xF000;
 
     switch (test) {
