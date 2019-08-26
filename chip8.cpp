@@ -1,9 +1,10 @@
 #include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
 #include "chip8.h"
 
 chip8::chip8() {
 
-    initialize();
 }
 
 chip8::~chip8() {
@@ -44,9 +45,8 @@ void chip8::initialize() {
 
 void chip8::emulate_cycle() {
 
-    //Fetch Opcode
-    opcode = mem[PC] << 8u |
-             mem[PC + 1];        //First we shift it 8 bits to the left, then we merge PC with PC+1 opcodes with an OR
+    //Fetch Opcode, 2 byte
+    opcode = mem[PC] << 8u | mem[PC + 1];        //First we shift it 8 bits to the left, then we merge PC with PC+1 opcodes with an OR
 
     switch (opcode & 0xF000u) {     //if opcode has something at the first left bit
 
@@ -186,7 +186,7 @@ void chip8::emulate_cycle() {
             break;
         case 0xC000:        ///RND byte AND kk
 
-            V[(opcode & 0x0F00u) >> 8u] =  rand()%256 + ((opcode & 0x00FFu) << 8u);
+            V[(opcode & 0x0F00u) >> 8u] = rand() % 256 + ((opcode & 0x00FFu) << 8u);
             PC += 2;
             break;
 
@@ -228,7 +228,7 @@ void chip8::emulate_cycle() {
             switch (opcode & 0xF000u) {
                 //Jump code
                 case 0x0000:
-                    printf("This is useless");
+                    break;
             }
             switch (opcode & 0x000Fu) {
 
@@ -270,7 +270,7 @@ void chip8::emulate_cycle() {
 
 
         default:
-            std::cout << "Error: unknown opcode" << std::endl;
+            std::cout << "Error: unknown opcode: " << opcode << std::endl;
     }
     //at the end update timers
 
@@ -283,4 +283,56 @@ void chip8::emulate_cycle() {
         std::cout << "Beep" << std::endl;
     }
 
+}
+
+bool chip8::load_game(const char *name) {
+
+    FILE *game = fopen(name, "rb");
+
+    if (game == NULL) {
+        fputs("File error", stderr);
+        return false;
+    }
+
+    //Check file size
+    fseek(game, 0, SEEK_END);
+    long game_size = ftell(game);   //saves the game size
+    rewind(game);       //get back to the start of the file
+    std::cout << "File size: " << game_size << std::endl;
+
+    //Allocate memory to contain the game
+
+    char* buffer = (char*)malloc(sizeof(char)* game_size);
+
+    if (buffer == NULL){
+        fputs("Couldn't allocate memory", stderr);
+        return false;
+    }
+
+    size_t result = fread(buffer, 1, game_size, game);      //Copy the file into the buffer
+    if (result != game_size){            //something went wrong
+        fputs("Something went wrong with the allocation", stderr);
+        return false;
+    }
+
+    //Copy buffer into the emulated memory
+
+    if ( (4096 - 512) < game_size){
+        fputs("Game is too big",stderr);
+        return false;
+    }
+    else{
+
+        for (int i=0; i < game_size; ++i){
+            mem[i + 512] = buffer[i];
+        }
+    }
+
+    fclose(game);       //Close the file
+    free(buffer);       //frees buffer
+    return true;
+}
+
+void chip8::set_keys() {
+    //todo make
 }

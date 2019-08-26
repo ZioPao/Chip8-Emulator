@@ -4,12 +4,23 @@
 
 class chip8 {
 
-
-    //todo why is it public?
 public:
-    chip8();
 
+    chip8();
     ~chip8();
+
+    void initialize();
+    bool load_game(const char* name);
+    void emulate_cycle();
+    void set_keys();
+    //void debugRender();
+    //bool loadApplication(const char *filename);
+    bool draw_flag;
+    unsigned char screen[64 * 32];        //screen dimensions
+
+
+
+private:
 
     unsigned char chip8_fontset[80] =
             {
@@ -31,25 +42,6 @@ public:
                     0xF0, 0x80, 0xF0, 0x80, 0x80  // F
             };
 
-    bool draw_flag;
-
-    void emulate_cycle();
-
-    //void debugRender();
-
-    //bool loadApplication(const char *filename);
-
-// Chip8
-
-
-//0x000 - 0x1FF - Interpreter
-//0x050-0x0A0 - Video output
-//0x200-0xfff  - PROM and WRAM
-
-    unsigned char screen[64 * 32];        //screen dimensions
-    unsigned char key[16];
-
-private:
     unsigned short opcode;          //single opcode
     unsigned char mem[4096];        //memory
     unsigned char V[16];          //registers
@@ -58,13 +50,13 @@ private:
     unsigned short PC;      //same as I
 
     unsigned short stack[16];        // Stack (16 levels)
-    unsigned short sp;				// Stack pointer
-    unsigned char memory[4096];    // Memory (size = 4k)
+    unsigned short sp;                // Stack pointer
+
+    unsigned char key[16];
 
     unsigned char delay_timer;        // Delay timer
     unsigned char sound_timer;        // Sound timer
 
-    void initialize();
 };
 
-#endif //CHIP8_2_CHIP8_H
+#endif

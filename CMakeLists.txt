@@ -3,5 +3,5 @@ project(chip8_2)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(chip8_2 main.cpp chip8.cpp chip8.h)
+add_executable(chip8_2 main.cpp chip8.cpp chip8.h main.h)
 target_link_libraries(chip8_2 -lOpenGL32 -lfreeGLUT)
