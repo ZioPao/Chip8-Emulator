@@ -1,6 +1,7 @@
 #ifndef CHIP8_2_CHIP8_H
 #define CHIP8_2_CHIP8_H
 
+#include <time.h>
 
 class chip8 {
 
