@@ -7,9 +7,11 @@
 #define SCREEN_WIDTH 64
 #define SCREEN_HEIGHT 32
 #define MODIFIER 10
+
 //Stuff for display sizes
 int display_width = SCREEN_WIDTH * MODIFIER;
 int display_height = SCREEN_HEIGHT * MODIFIER;
+
 chip8 c8;
 
 //Inits

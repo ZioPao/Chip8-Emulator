@@ -381,7 +381,3 @@ bool chip8::load_game(const char *name) {
     free(buffer);       //frees buffer
     return true;
 }
-
-void chip8::set_keys() {
-    //todo make
-}

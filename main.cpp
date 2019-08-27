@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
 
     c8.initialize();      //emu initialization
     init_graphics(argc, argv);
-    init_input();
+    //init_input();
 
 
     if (!c8.load_game("pong"))
@@ -35,9 +35,9 @@ void init_graphics(int argc, char **argv) {
 
     glutDisplayFunc(draw_graphics);
     glutIdleFunc(draw_graphics);
-    //glutReshapeFunc(reshape_window); todo fix
-    glutKeyboardFunc(keyboard_down);
-    glutKeyboardFunc(keyboard_up);
+    glutReshapeFunc(reshape_window);
+    //glutKeyboardFunc(keyboard_down);
+    //glutKeyboardFunc(keyboard_up);
 }
 
 void init_input() {
@@ -87,7 +87,7 @@ void reshape_window(GLsizei w, GLsizei h) {
     glClearColor(0.0f, 0.0f, 0.5f, 0.0f);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    //gluOrtho2D(0, w, h, 0);
+    gluOrtho2D(0, w, h, 0);
     glMatrixMode(GL_MODELVIEW);
     glViewport(0, 0, w, h);
 

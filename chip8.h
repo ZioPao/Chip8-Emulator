@@ -13,7 +13,6 @@ public:
     void initialize();
     bool load_game(const char* name);
     void emulate_cycle();
-    void set_keys();
 
     bool draw_flag;
     unsigned char screen[64 * 32];        //screen dimensions
