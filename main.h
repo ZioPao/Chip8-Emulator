@@ -17,13 +17,11 @@ void init_graphics(int argc, char **argv);
 void init_input();
 
 static void draw_graphics();
-static void update_quads();
+static void update_quads(const chip8& c8);
 static void draw_pixel(int x, int y);
 
 void reshape_window(GLsizei w, GLsizei h);
-
 void keyboard_up(unsigned char key, int x, int y);
-
 void keyboard_down(unsigned char key, int x, int y);
 
 

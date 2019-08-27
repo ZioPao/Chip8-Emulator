@@ -49,13 +49,11 @@ void chip8::initialize() {
 void chip8::emulate_cycle() {
 
     //Fetch Opcode, 2 byte
-    unsigned short test = (mem[PC] << 8u) | mem[PC + 1];
-    std::cout << test << std::endl;
-    //std::cout << mem[PC +1] << std::endl;
+    //unsigned short test = (mem[PC] << 8u) | mem[PC + 1];
+    //std::cout << test << std::endl;
     opcode = mem[PC] << 8u |
              mem[PC + 1];        //First we shift it 8 bits to the left, then we merge PC with PC+1 opcodes with an OR
 
-    //std::cout << opcode << std::endl;
     switch (opcode & 0xF000u) {     //if opcode has something at the first left bit
 
         case 0x0000:                //it was something like 0x00F0, so it returned 0
@@ -68,7 +66,6 @@ void chip8::emulate_cycle() {
                     PC += 2;
                     break;
                 case 0x000E:    ///Returns from subroutine
-
                     //subroutine is stored somewhere in the stack
                     --sp;           //prevent overflow, max 16
                     PC = stack[sp];     //restore PC
@@ -111,13 +108,13 @@ void chip8::emulate_cycle() {
 
         case 0x6000:      ///Set Vx = kk
 
-            V[(opcode & 0x0F00u) >> 8u] = (opcode & 0x00FFu);      //todo why we dont shift this?
+            V[(opcode & 0x0F00u) >> 8u] = (opcode & 0x00FFu);      //we dont shift kk because it's the last right bit, wouldnt make sense
             PC += 2;
             break;
 
         case 0x7000:        ///Set Vx = Vx + kk
 
-            V[opcode & 0x0F00u] += opcode & 0x00FFu;
+            V[(opcode & 0x0F00u) >> 8u] += opcode & 0x00FFu;
             PC += 2;
             break;
 
@@ -190,9 +187,12 @@ void chip8::emulate_cycle() {
 
                     PC += 2;
                     break;
-                case 0x0008:        ///Set Vx = Vx SHL 1
+                case 0x000E:        ///Set Vx = Vx SHL 1
+                {
+                    unsigned short test = V[(opcode & 0x0F00u) >> 8u];      //hex value. We need to shift it to get the first left bit
+                    test = test & 0xF000u;
 
-                    if ((V[(opcode & 0x0F00u) >> 8u]) & (0xF000u) == 1)       //todo something isnt right
+                    if (test == 1)       //todo something isnt right
                         V[0xF] = 1;
                     else
                         V[0xF] = 0;
@@ -201,22 +201,26 @@ void chip8::emulate_cycle() {
 
                     PC += 2;
                     break;
+
+                }
+
+
                 default:
                     std::cout << "Unknown opcode: " << opcode << std::endl;
                     break;
             }
             break;
         case 0x9000:        ///Skip if Vx != Vy
-            if (V[opcode & 0x0F00u] != V[opcode & 0x00F0u])
+            if (V[(opcode & 0x0F00u) >> 8u] != V[(opcode & 0x00F0u) >> 4u])
                 PC += 2;
             break;
         case 0xA000:     ///Annn: Sets I to nnn
-            I = (opcode & 0x0FFFu) << 4u;
+            I = (opcode & 0x0FFFu);
             PC += 2;
-            break;  //todo not sure
+            break;
 
         case 0xB000:        ///JP to nnn + V0
-            PC = ((opcode & 0x0FFFu) << 4u) + V[0x0];
+            PC = (opcode & 0x0FFFu) + V[0x0];
             break;
         case 0xC000:        ///RND byte AND kk
 

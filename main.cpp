@@ -16,10 +16,10 @@ int main(int argc, char **argv) {
     init_input();
 
 
-    if (!c8.load_game("tetris"))
+    if (!c8.load_game("pong"))
         exit(1);
 
-    glutMainLoop();
+    glutMainLoop();     //main loop to let it display stuff
     return 0;
 }
 
@@ -37,7 +37,7 @@ void init_graphics(int argc, char **argv) {
 
     glutDisplayFunc(draw_graphics);
     glutIdleFunc(draw_graphics);
-    glutReshapeFunc(reshape_window);
+    //glutReshapeFunc(reshape_window); todo fix
     glutKeyboardFunc(keyboard_down);
     glutKeyboardFunc(keyboard_up);
 }
@@ -47,28 +47,26 @@ void init_input() {
 }
 
 void draw_graphics() {
+
     c8.emulate_cycle();       //One cycle
 
     if (c8.draw_flag) {
         glClear(GL_COLOR_BUFFER_BIT);   //Clear framebuffer
-        update_quads();
-        // Swap buffers
-        glutSwapBuffers();
-        // Processed frame
-        c8.draw_flag = false;
+        update_quads(c8);
+        glutSwapBuffers();        // Swap buffers
+        c8.draw_flag = false;           // Processed frame
     }
 }
 
-void update_quads() {
+void update_quads(const chip8& c8) {
 
     //Draw quads
-    for (int y = 0; y < SCREEN_HEIGHT; ++y)
-        for (int x = 0; x < SCREEN_WIDTH; ++x) {
-
+    for (int y = 0; y < 32; ++y)
+        for (int x = 0; x < 64; ++x) {
             if (c8.screen[(y * 64) + x] == 0)
-                glColor3f(0.0f, 0.0f, 0.0f);        //rest of the screen?
+                glColor3f(0.0f, 0.0f, 0.0f);       //actual sprites?
             else
-                glColor3f(1.0f, 1.0f, 1.0f);        //actual sprites
+                glColor3f(1.0f, 1.0f, 1.0f);
 
             draw_pixel(x, y);
         }
@@ -78,11 +76,10 @@ void draw_pixel(int x, int y) {
 
     //We're making quads, so it makes sense that we have 4 vertices
     glBegin(GL_QUADS);
-
-    glVertex3f((x * MODIFIER) + 0.0f, (y * MODIFIER) + 0.0f, 0.0f);
-    glVertex3f((x * MODIFIER) + 0.0f, (y * MODIFIER) + MODIFIER, 0.0f);
-    glVertex3f((x * MODIFIER) + MODIFIER, (y * MODIFIER) + MODIFIER, 0.0f);
-    glVertex3f((x * MODIFIER) + MODIFIER, (y * MODIFIER) + 0.0f, 0.0f);
+        glVertex3f((x * MODIFIER) + 0.0f, (y * MODIFIER) + 0.0f, 0.0f);
+        glVertex3f((x * MODIFIER) + 0.0f, (y * MODIFIER) + MODIFIER, 0.0f);
+        glVertex3f((x * MODIFIER) + MODIFIER, (y * MODIFIER) + MODIFIER, 0.0f);
+        glVertex3f((x * MODIFIER) + MODIFIER, (y * MODIFIER) + 0.0f, 0.0f);
 
     glEnd();
 
@@ -92,7 +89,7 @@ void reshape_window(GLsizei w, GLsizei h) {
     glClearColor(0.0f, 0.0f, 0.5f, 0.0f);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-//    gluOrtho2D(0, w, h, 0);
+    //gluOrtho2D(0, w, h, 0);
     glMatrixMode(GL_MODELVIEW);
     glViewport(0, 0, w, h);
 
